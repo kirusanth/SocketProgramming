@@ -1,0 +1,102 @@
+import java.io.*;
+import java.net.*;
+import java.util.Date;
+
+public class PingClient {
+
+	private static final int MAX_TIMEOUT = 1000; // 1000ms = 1s Time out for
+	private static final String ipv4= "^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$"; // ipaddress check
+
+	public static void main(String[] args) throws Exception {
+
+		// ping command
+		String userInput;
+		int sequenceNumber = 0;
+
+		// Get Command line argument
+		if (args.length != 1) {
+			System.out.println("Required arguments: port");
+			return;
+		} 
+		  //Check whether port is valid or not 
+		else if (Integer.parseInt(args[0])<=1024){
+			System.out.println("port number should be greater than 1024 !");
+			return;
+		}
+		//Correct Port ,so display the required inputs from user
+		else {
+			System.out.println("Command Syntax: ping <destination addr> <destination port>");
+			System.out.println("Use CTRL^C to quit");
+		}
+		// Get port number from command line input and convert it to integer
+		int clientPort = Integer.parseInt(args[0]);
+
+		/*
+		 * create a datagram socket for sending and receiving UDP packets Port
+		 * number of client is given by user through command line (clientPort)
+		 */
+
+		DatagramSocket clientSocket = new DatagramSocket(clientPort);
+
+		// create input stream to get ping command
+		BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+
+		// Get the ping command from user
+		userInput = inFromUser.readLine();
+
+		String[] commands = userInput.split(" ");
+
+
+		Inet4Address serverAddress = (Inet4Address) Inet4Address.getByName(commands[0]);
+		int serverPort = Integer.parseInt(commands[1]);
+		
+		//check the destination address is valid or not
+		if (!ipv4.matches(serverAddress.toString())){
+			System.out.println("dest Address is invalid");
+			return;
+		}
+		//check destination port 
+		 if (serverPort<=1024){
+				System.out.println(" dest port number should be greater than 1024 !");
+				return;
+		 }
+
+		
+		while (sequenceNumber < 10) {
+			// send packets
+			// Timestamp for each packet
+			Date timestamp = new Date();
+			// create the message to send to server
+			String sendDataMessage = " PING " + sequenceNumber + " " + timestamp +"\n";
+			byte[] sendData = new byte[1024];
+			sendData = sendDataMessage.getBytes();
+
+			// create the ping packet to send to the server
+			DatagramPacket ping = new DatagramPacket(sendData, sendData.length, serverAddress, serverPort);
+
+			// Send the packet through clientSocket (port)
+			clientSocket.send(ping);
+			// receive packets
+				try {
+					byte[] receiveData = new byte[1024];
+					clientSocket.setSoTimeout(MAX_TIMEOUT);
+					DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+					clientSocket.receive(receivePacket);
+					String modifiedSentence = new String(receivePacket.getData());
+					String ipAddress = receivePacket.getAddress().getHostAddress();
+					System.out.println("Received from " + ipAddress +": " + modifiedSentence.trim());
+				} catch (SocketTimeoutException e) {
+					System.out.println("PING " + sequenceNumber + " Request timed out.");
+
+				}
+				// changing to next packet sequence number
+				sequenceNumber++;
+				
+
+		}
+
+		clientSocket.close();
+
+	}
+
+}

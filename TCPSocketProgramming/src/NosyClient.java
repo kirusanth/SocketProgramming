@@ -1,0 +1,63 @@
+import java.io.*;
+import java.net.*;
+import java.util.regex.Pattern;
+
+/*
+ * Name:Kirusanth Thiruchelvam
+ * Student No: 212918298
+ * Course:EECS 3214
+ * Professor: Natalija Vlajic
+ * Title: NosyClient
+ * Description:	NosyCleint requests over TCP.
+ * Date: Apr 14,2015
+ * ********************************************************************************/
+public class NosyClient {
+	// IP address regex
+	private static final String IPV4 = "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
+			+ "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
+
+	public static void main(String[] args) throws Exception {
+		// create Pattern object to validate ip addresses
+		Pattern reg = Pattern.compile(IPV4);
+		// Check whether user provide host and port or not
+		if (args.length != 2) {
+			System.out.println("Required arguments: host and port");
+			System.out.println("Command Syntax: java NosyClient <host> <port>");
+			return;
+		}
+		// check whether the host address is valid or not
+		if (!reg.matcher(args[0]).matches()) {
+			System.out.println("Host Address is invalid!");
+			return;
+		}
+		// Check whether port is valid or not
+		if (Integer.parseInt(args[1]) <= 1024) {
+			System.out.println("Port number should be greater than 1024!");
+			return;
+		}
+		// Declaring variables
+		String serverAddress = args[0];
+		int serverPort = Integer.parseInt(args[1]);
+
+		String sentence = "";
+		String modifiedSentence;
+		BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+		Socket clientSocket = new Socket(serverAddress, serverPort);
+		DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
+		BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+		while (!(modifiedSentence = inFromServer.readLine()).isEmpty()) {
+			System.out.println(modifiedSentence);
+		}
+
+		sentence = inFromUser.readLine();
+		outToServer.writeBytes(sentence + '\n');
+		modifiedSentence = inFromServer.readLine();
+		if (!modifiedSentence.isEmpty()) {
+			System.out.println(modifiedSentence);
+		}
+		clientSocket.close();
+
+	}
+
+}

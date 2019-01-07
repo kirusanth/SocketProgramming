@@ -1,0 +1,50 @@
+import java.io.*;
+import java.net.*;
+
+public class NosyClient {
+
+	public static void main (String[] args) throws Exception {
+		String ipv4= "^(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
+		//Check whether user provide host and port or not
+		if (args.length != 2) {
+			System.out.println("Required arguments: host and port");
+			System.out.println("Command Syntax: java NosyClient <host> <port>");
+			return;
+		}
+		//check whether the host address is valid or not
+        if(!ipv4.matches(args[0])){
+			System.out.println("host Address is invalid");
+			return;
+		}
+        //Check whether port is valid or not 
+        if (Integer.parseInt(args[0])<=1024){
+			System.out.println("port number should be greater than 1024 !");
+			return;
+		}
+        String serverAddress = args[0];
+	    int serverPort = Integer.parseInt(args[1]);
+	    
+	    String sentence="";
+		String modifiedSentence;
+		BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+		Socket clientSocket = new Socket(serverAddress, serverPort);
+	    DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
+		BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+
+		while (!(modifiedSentence = inFromServer.readLine()).isEmpty() ){
+	         System.out.println(modifiedSentence);
+        }
+		
+		sentence = inFromUser.readLine();
+		outToServer.writeBytes(sentence + '\n');
+		modifiedSentence = inFromServer.readLine();
+		if(!modifiedSentence.isEmpty()){
+		System.out.println(modifiedSentence);
+	    }
+		clientSocket.close();
+
+	
+	}
+	
+	
+}
